@@ -8,43 +8,11 @@
 #include <helper_cuda.h>
 #include <cudnn.h>
 
-//TODO for file:
-// do all tests (left to do: bin input/ non-bin, explicit gemm/implicit)
-//TESTS TO RUN:
-// 1. GEMM/IMPLICIT GEMM
-// 2. Bin Inputs/FP inputs
 
-//#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
-//#pragma message("WARNING! Not using atomics!\n");
-//#endif
-
-// Options: throughput test, one input timer, binarized inputs test
-//TODO+: 
-//		-Maxpool loop through channels and pack along the way. This happens any way, so should only improve performance
-//		-For dense layers, pack as you multiply, or maybe 
-
-// Notes:
-//	-current performance 5.5x  TF implementation
-//	-two different packing bitwidths are used: 25 and 32. All layers, except for the first dense layer, use packing bitwidth of 25.
-//	-<<<GRID_SIZE, BLOCK_SIZE>>>
-
-//NEXT: compute gold for non-bin inputs, compute accuracy from test folder
 #define FRAMES 1000
 #define REPEAT 1
 
-//#define THROUGHPUT_TEST 
-//#define MEASURE_MEMCPY
-
-//#define FUSED_CONVOLUTION //1:3
-//#define BINARIZED_INPUT // 2,4:1,3 This  covers binary input+bin weights
-//#define NO_SHARED_MEMORY
 #define USE_CUBLAS
-//Test convolution
-//1. im2col+convolution, fused
-//2. same with binweights
-//3. im2col+ convolution separate
-//4. same with binary
-//5. repeat all with only global memory
 
 #ifdef BINARIZED_INPUT
 #define TEST_LOOP \
