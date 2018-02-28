@@ -1816,17 +1816,6 @@ int main()
 		printf("\nFull precision convolution (1st Layer only) %f us (%1.1f ~fps)\n", 1000 * ms_t / (FRAMES*REPEAT), REPEAT*FRAMES / (ms_t / 1000.0));
 
 
-		//CUDA_ERROR(cudaMemcpy(fIm2Col, dev_fIm2Col, WIDTH * HEIGHT *(3 * 25) * sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy");
-		//CUDA_ERROR(cudaMemcpy(fconv1, dev_fconv1, 32 * 96 * 96 * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy");
-
-		//printf("\nIm2Col3d comparison: ");
-		//CompareResults(gold_fIm2Col, fIm2Col, WIDTH*HEIGHT * 3 * 25);
-		//printf("Conv1 comparison: ");
-		//CompareResults(gold_fconv1, fconv1, 96 * 96 * 32);
-
-
-
-
 
 
 
@@ -1888,15 +1877,7 @@ int main()
 
 		printf("\nFP convolution + cuBLAS (1st Layer only) %f us (%1.1f ~fps)\n", 1000 * ms_t / (FRAMES*REPEAT), REPEAT*FRAMES / (ms_t / 1000.0));
 
-	//	CUDA_ERROR(cudaMemcpy(fIm2Col, dev_fIm2Col, WIDTH * HEIGHT *(3 * 25) * sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy");
-	//	CUDA_ERROR(cudaMemcpy(fconv1, dev_fconv1, 32 * 96 * 96 * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy");
 
-//		printf("\nIm2Col3d comparison: ");
-//		CompareResults(gold_fIm2Col, fIm2Col, WIDTH*HEIGHT * 3 * 25);
-//		printf("L1: %f\n", L1(gold_fIm2Col, fIm2Col, 96 * 96 * 32));
-//		printf("Conv1 comparison: ");
-//		CompareResults(gold_fconv1, fconv1, 96 * 96 * 32);
-//		printf("L1: %f\n", L1(gold_fconv1, fconv1, 96 * 96 * 32));
 
 //cuDNN + cuBLAS
 #ifdef MEASURE_MEMCPY
@@ -1992,49 +1973,6 @@ int main()
 					dev_fconv2);
 				cudnnPoolingForward(hnd_cuDNN, desc_MaxPooling2, &alpha, desc_tsrConv2, dev_fconv2, &beta, desc_tsrMxp2, dev_fmxpConv2);
 
-				//cublasSgemm(handle, tB, tA,
-				//wB, hA, wA (hB, wA, hA )
-				//&alpha,
-				//dev_B, wB,
-				//dev_A, wA,
-				//&beta,
-				//dev_C, wC);
-
-				//Original
-				//cublasSgemm(hnd_cuBLAS, CUBLAS_OP_N, CUBLAS_OP_N,
-				//	1, 100, 24*24*32,
-				//	&alpha,
-				//	dev_fmxpConv2, 1,
-				//	dev_fwD1, 24*24*32,
-				//	&beta,
-				//	dev_fd1, 1);
-
-
-				//cublasSgemm(hnd_cuBLAS, CUBLAS_OP_T, CUBLAS_OP_T,
-				//	100, 1,24*24*32,
-				//	&alpha,
-				//	
-				//	dev_fwD1, 100,
-				//	dev_fmxpConv2, 24*24*32,
-				//	&beta,
-				//	dev_fd1, 100);
-
-				//cublasSgemm(hnd_cuBLAS, CUBLAS_OP_N, CUBLAS_OP_N,
-				//	100, 1, 24 * 24 * 32,
-				//	&alpha,
-				//	dev_fwD1, 24 * 24 * 32,
-				//	dev_fmxpConv2, 1,
-				//	
-				//	&beta,
-				//	dev_fd1, 1);
-
-				//cublasSgeam(hnd_cuBLAS, CUBLAS_OP_N, CUBLAS_OP_N,
-				//	100, 24 * 24 * 32,
-				//	&alpha,
-				//	dev_fwD1, 100,
-				//	&beta,
-				//	dev_fwD1, 100,
-				//	dev_ftwD1, 100);
 
 				cublasSgeam(hnd_cuBLAS, CUBLAS_OP_N, CUBLAS_OP_N,
 					24 * 24 * 32, 100,
@@ -2275,73 +2213,6 @@ int main()
 		fprintf(stderr, "Cannot proceed with launching kernels: %s\n", cudaGetErrorString(cudaStatus));
 	
 
-
-
-	//matrixMulCPU(gold_fconv1,fwConv1, fIm2Col,32,75,96*96);
-	//printf("Conv1 comparison: ");
-	//CompareResults(gold_fconv1, fconv1, 96 * 96 * 32);
-
-		//uclDisplayMatrix(fconv1, 1, 20, 0);
-		//printf("gold_fconv1:\n");
-		//uclDisplayMatrix(gold_fconv1, 1, 20, 0);
-
-		//printf("diff:\n");
-		//for (int i = 0; i < 20; i++)
-		//	printf("%f, ", gold_fconv1[i] - fconv1[i]);
-
-
-
-
-		//printf("\n\n integer Im2Col3d comparison: ");
-
-
-		//CompareResults(gold_Im2Col, Im2Col, WIDTH*HEIGHT * 3);
-
-		//printf("integer Conv1 comparison: ");
-		//CompareResults(gold_conv1, conv1, 96 * 96 * 32);
-
-		//uclDisplayMatrixi(conv1, 1, 20, 0);
-		//printf("gold_fconv1:\n");
-		//uclDisplayMatrixi(gold_conv1, 1, 20, 0);
-
-		//printf("diff:\n");
-		//for (int i = 0; i < 20; i++)
-		//	printf("%i, ", gold_conv1[i] - conv1[i]);
-		//printf("\nim2col:");
-		//uclDisplayMatrix(fIm2Col, 1, 100, 100);
-
-		//printf("\n gold_im2col:");
-		//uclDisplayMatrix(gold_fIm2Col, 1, 100, 100);
-
-
-
-	//printf("Maxpool1 comparison: ");
-	//CompareResults(gold_mxpConv1, mxpConv1, 32 * 48 * 48);
-
-	//printf("\nIm2Col3d2 comparison: ");
-	//CompareResults(gold_pkMxpConv1, pkMxpConv1, 48 * 48 * 25);
-
-	//printf("Conv2 comparison: ");
-	//CompareResults(gold_conv2, conv2, 48 * 48 * 32);
-
-	//printf("Maxpool2 comparison: ");
-	//CompareResults(gold_mxpConv2, mxpConv2, 32 * 24 * 24);
-
-	//printf("\npkH comparison: ");
-	//CompareResults(gold_pkH, pkH, 24 * 24);
-
-	//printf("\nDense1 comparison: ");
-	//CompareResults(gold_d1, d1, 100);
-
-	//printf("Dense2 comparison: ");
-	//CompareResults(gold_d2, d2, 100);
-
-	//printf("Dense3 comparison: ");
-	//CompareResults(gold_d3, d3, 4);
-	//printf("Dense3 output: ");
-	//uclDisplayMatrixi(d3, 1, 4, 0);
-//	uclDisplayMatrixi(conv1, 1, 20, 0);
-//	uclDisplayMatrixi(Im2Col, 1,75,0);
 
 
 //	printf("\nCuda event timer: %f us\n", 1000 * ms_t);
