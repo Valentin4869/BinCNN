@@ -1310,10 +1310,10 @@ int main()
 		device, deviceProp.name, deviceProp.major, deviceProp.minor,deviceProp.multiProcessorCount,deviceProp.totalGlobalMem/(1024*1024));
 
 	
-	//Fill memory so that out-of-bound accesses don't survive
-	float* filler = (float*)malloc(100 * 100 * 100 * sizeof(float));
-	float* dev_filler;
-	CUDA_ERROR(cudaMalloc((void**)&dev_filler, 1000 * 100 * 100 * sizeof(float)), "cudaMalloc");
+	///Fill memory so that out-of-bound accesses don't survive
+	//float* filler = (float*)malloc(100 * 100 * 100 * sizeof(float));
+	//float* dev_filler;
+	//CUDA_ERROR(cudaMalloc((void**)&dev_filler, 1000 * 100 * 100 * sizeof(float)), "cudaMalloc");
 
 
 
