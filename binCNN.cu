@@ -12,7 +12,13 @@
 #define FRAMES 1000
 #define REPEAT 1
 
+//#define MEASURE_MEMCPY
+
+//#define FUSED_CONVOLUTION //1:3
+//#define BINARIZED_INPUT // 
+//#define NO_SHARED_MEMORY
 #define USE_CUBLAS
+
 
 #ifdef BINARIZED_INPUT
 #define TEST_LOOP \
@@ -73,7 +79,7 @@
 
 
 //FOR DEBUGGING:
-#define VERIFY 1
+//#define VERIFY 1
 
 #define UNIQUE_BLOCK(idx,idy,idz) (blockIdx.x==idx && blockIdx.y==idy&& blockIdx.z==idz)
 #define UNIQUE_THREAD(idx,idy,idz) (threadIdx.x ==idx && threadIdx.y==idy&& threadIdx.z==idz)
@@ -107,12 +113,7 @@ void pause() {
 #endif
 }
 
-// Optimization ideas:												Ctrl+f code
-// 1. Combine maxpooling + packing									  opt001
-// 2. Parallelize packing loads and summation						  opt002
-// 3. Combine dense layers (2 and 3)							      opt003
-// 4. Use a 3D workspace for Im2Col3d 								   DONE
-// 5. Im2Col3d should handle a separate channel per block			  opt005
+
 
 
 #ifdef BINARIZED_INPUT
@@ -124,25 +125,11 @@ __constant__ unsigned int wgtConv1[FMAPS1 * KERNEL_SIZE*C1 / PACK_BITWIDTH];
 __constant__  int wgtConv1[FMAPS1 * KERNEL_SIZE*C1];
 
 __constant__ int T[] = {-127,-100,-70};
-//__constant__ int T[] = { 0,0,0 }; //for correct results
-//__constant__ int T2[] = {-127,-100,-70};
-//__constant__ int T2[] = { 0,0,0 }; //for correct results
 
-//__constant__ unsigned int wgtConv2[FMAPS1 * KERNEL_SIZE*C2 / PACK_BITWIDTH]; //not used
 #endif
 
 
 
-//TESTS:
-//Non-fused:
-// fp cuDNN + cuBLAS
-// bin cuDNN (first layer)+ binn
-// bin all
-//+ make accuracy tests here
-
-//#define FUSED_CONVOLUTION //1:3
-//#define BINARIZED_INPUT // 2,4:1,3 This  covers binary input+bin weights
-//#define NO_SHARED_MEMORY
 
 #ifdef FUSED_CONVOLUTION
 
@@ -1134,6 +1121,7 @@ __global__ void fxnorConv1(const float*  src, float* dst, float*  wgt) {
 
 #endif
 
+//This function is from the Nvidia CUDA samples
 template <typename T>
 void matrixMulCPU(T *C, const T *A, const T *B, unsigned int hA, unsigned int wA, unsigned int wB)
 {
@@ -2238,123 +2226,6 @@ int main()
 		//printf("\nBinarized convolution %f us (%1.1f ~fps)\n", 1000 * ms_t / (FRAMES*REPEAT), REPEAT*FRAMES / (ms_t / 1000.0));
 		printf("\nBinarized convolution (whole network) %f us (%1.1f ~fps)\n", 1000 * total / (FRAMES*REPEAT), REPEAT*FRAMES / (total / 1000.0));
 
-	//	CUDA_ERROR(cudaMemcpy(pkIm2Col, dev_pkIm2Col, WIDTH * HEIGHT *(3) * sizeof(unsigned int), cudaMemcpyDeviceToHost), "cudaMemcpy");
-	//	CUDA_ERROR(cudaMemcpy(conv1, dev_conv1, 32 * 96 * 96 * sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy");
-	//	CUDA_ERROR(cudaMemcpy(d3, dev_d3, 1 * 4 * sizeof(int), cudaMemcpyDeviceToHost), "cudaMemcpy");
-	//	printf("bin d3:\n");
-	//	uclDisplayMatrixi(d3, 1, 4, 0);
-		//printf("\nIm2Col3d comparison: ");
-		//CompareResults(gold_pkIm2Col, pkIm2Col, WIDTH*HEIGHT * 3);
-		//	printf("Conv1 comparison: ");
-		//CompareResults(gold_conv1, conv1, 96 * 96 * 32);
-
-
-//
-//		cudaDeviceSynchronize();
-//		cudaEventRecord(start, NULL);
-//		cudaDeviceSynchronize();
-//		//normalize image
-//
-//
-//
-//		normalizeImage(normalizedIm, (int*)im, -127, 127);
-//	
-//
-//
-//		//Copy input and weights to device
-//		//CUDA_ERROR(cudaMemcpy(dev_im, normalizedIm, WIDTH * HEIGHT * C1 * sizeof(unsigned int), cudaMemcpyHostToDevice), "cudaMemcpy");
-//
-//			TEST_LOOP{
-//
-//			
-//			//cudaDeviceSynchronize();
-//			
-//
-//
-//#ifdef BINARIZED_INPUT
-//			//Copy input 
-//			cudaMemcpy(dev_im, normalizedIm, WIDTH * HEIGHT * C1 * sizeof(unsigned int), cudaMemcpyHostToDevice);
-//		//	Im2Col3d << < blocks_Im2Col, threads_Im2Col >> > (dev_im, dev_pkIm2Col);
-//			xnorConv1 << <blocks_Conv1, threads_Conv1 >> > (dev_pkIm2Col, dev_conv1, dev_pkwConv1);
-//#else
-//
-//	#if FRAMES==1
-//				//Copy input 
-//					cudaMemcpy(dev_fim, fim, WIDTH * HEIGHT * C1 * sizeof(float), cudaMemcpyHostToDevice);
-//			cudaMemcpy(dev_im, im, WIDTH * HEIGHT * C1 * sizeof(int), cudaMemcpyHostToDevice);
-//	#else
-//				//Copy input 
-//					//cudaMemcpy(dev_im, &batch[i*WIDTH*HEIGHT*C1], WIDTH * HEIGHT * C1 * sizeof(int), cudaMemcpyHostToDevice);
-//	#endif
-//
-//#ifdef USE_CUBLAS
-//			
-//						fIm2Col3d << < blocks_Im2Col, threads_Im2Col >> > (dev_fim, dev_fIm2Col);
-//			fxnorConv1 << <blocks_Conv1, threads_Conv1 >> > (dev_fIm2Col, dev_fconv1, dev_fwConv1);
-//
-//
-//		//	fIm2Col3d << < blocks_Im2Col, threads_Im2Col >> > (dev_fim, dev_fIm2Col);
-//		//	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 96 * 96, 32, 75, &alpha, dev_fIm2Col, 96 * 96, dev_fwConv1, 75, &beta, dev_fconv1, 96 * 96);
-//
-//		
-//
-//
-//			//Im2Col3d << < blocks_Im2Col, threads_Im2Col >> > (dev_im, dev_Im2Col);
-//		//	xnorConv1 << <blocks_Conv1, threads_Conv1 >> > (dev_Im2Col, dev_conv1, dev_wConv1);
-//
-//
-//
-//
-//
-//			//fprintf(stderr, "cublasSgemm: %s\n", _cudaGetErrorEnum(cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-//			//	96 * 96, 32, 75, //m,n,k
-//			//	&alpha,
-//			//	dev_fIm2Col, 96 * 96,
-//			//	dev_fwConv1, 75,
-//			//	&beta,
-//			//	dev_fconv1, 96 * 96)));
-//
-//	//	xnorConv1 << <blocks_Conv1, threads_Conv1 >> > (dev_Im2Col, dev_conv1, dev_wConv1);
-//
-//#else
-//			Im2Col3d << < blocks_Im2Col, threads_Im2Col >> > (dev_im, dev_Im2Col);
-//			xnorConv1 << <blocks_Conv1, threads_Conv1 >> > (dev_Im2Col, dev_conv1, dev_wConv1);
-//#endif
-//		
-//#endif
-//
-//
-//
-//			//cudaDeviceSynchronize(); 
-//
-//
-//
-//			//Im2Col3d_2 << < blocks_Im2Col2, threads_Im2Col2 >> > (dev_mxpConv1, dev_pkMxpConv1);
-//			//xnorConv2 << <blocks_Conv2, threads_Conv2 >> > (dev_pkMxpConv1, dev_pkwConv2, dev_conv2);
-//			//MaxPool2 << <blocks_MaxPool2, threads_MaxPool2 >> > (dev_conv2, dev_mxpConv2);
-//
-//			//packRowsDense1 << < blocks_pkRowsDense1, threads_pkRowsDense1 >> > (dev_mxpConv2, dev_pkH, 1);
-//			//xnorDense1 << <blocks_Dense1, threads_Dense1 >> > (dev_pkwD1, dev_pkH, dev_d1, 100, 24 * 24);
-//
-//			//packRowsDense2 << < blocks_pkRowsDense2, threads_pkRowsDense2 >> > (dev_d1, dev_pkD1, 1);
-//			//xnorDense2 << <blocks_Dense2, threads_Dense2 >> > (dev_pkwD2, dev_pkD1, dev_d2, 100, 4);
-//
-//			//packRowsDense3 << < blocks_pkRowsDense3, threads_pkRowsDense3 >> > (dev_d2, dev_pkD2, 1);
-//			//xnorDense3 << <blocks_Dense3, threads_Dense3 >> > (dev_pkwD3, dev_pkD2, dev_d3, 100, 4);
-//		//	cudaDeviceSynchronize();
-//		//	cudaMemcpy(d3, dev_d3, 4 * sizeof(int), cudaMemcpyDeviceToHost);
-//
-//
-//
-//			}
-//
-//		cudaEventRecord(stop, NULL);
-//		(cudaEventSynchronize(stop));
-//
-//		(cudaEventElapsedTime(&ms_t, start, stop));
-//
-//		
-//	//	cudaDeviceSynchronize();
 
 
 		cudaStatus = cudaGetLastError();
