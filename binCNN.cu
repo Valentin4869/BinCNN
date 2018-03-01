@@ -679,7 +679,7 @@ __global__ void bMaxPool2(const int* src, int* dst) {
 
 
 //This kernel packs column-wise to compensate for the flattening of the output of conv2
-// TensorFlow flattens channel-wise (column-size for 32x(24*24) matrix for example), and here we're using TensorFlow weights (Note: weights are flipped).
+// TensorFlow flattens channel-wise (column-wise for 32x(24*24) matrix for example), and here we're using TensorFlow weights.
 //<<<1,24*24>>>
 __global__ void packRowsDense1(const int *src, unsigned int *dst, int size)
 {
@@ -732,7 +732,7 @@ __global__ void bxnorDense1(const unsigned int* wgt, const unsigned int* src, in
 		if (threadIdx.x < range)
 			segSum[threadIdx.x] += segSum[range + threadIdx.x];
 
-		__syncthreads(); //<--- theoratically, this should not be needed here
+		__syncthreads(); //<--- theoretically, this should not be needed here
 	}
 
 
